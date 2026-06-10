@@ -53,6 +53,92 @@ function logError(text: string): void {
   console.error(dim(text));
 }
 
+function styleInlineMarkdown(text: string): string {
+  const bold = "\x1b[1m";
+  const italic = "\x1b[3m";
+  const cyan = "\x1b[36m";
+  const dimAnsi = "\x1b[2m";
+  const reset = "\x1b[0m";
+
+  return text
+    .replace(
+      /\[([^\]]+)\]\(([^)]+)\)/g,
+      `${bold}$1${reset} ${dimAnsi}($2)${reset}`,
+    )
+    .replace(/`([^`]+)`/g, `${cyan}$1${reset}`)
+    .replace(/\*\*([^*]+)\*\*/g, `${bold}$1${reset}`)
+    .replace(/__([^_]+)__/g, `${bold}$1${reset}`)
+    .replace(/\*([^*]+)\*/g, `${italic}$1${reset}`)
+    .replace(/_([^_]+)_/g, `${italic}$1${reset}`);
+}
+
+function renderMarkdownForTerminal(markdown: string): string {
+  if (!process.stdout.isTTY) {
+    return markdown;
+  }
+
+  const lines = markdown.replace(/\r\n/g, "\n").split("\n");
+  const out: string[] = [];
+  let inCodeBlock = false;
+  let codeBlockLang = "";
+
+  for (const line of lines) {
+    const codeFence = line.match(/^```\s*([a-zA-Z0-9_-]+)?\s*$/);
+    if (codeFence) {
+      if (!inCodeBlock) {
+        inCodeBlock = true;
+        codeBlockLang = codeFence[1] ?? "";
+        out.push(
+          `\x1b[2m${codeBlockLang ? `[code:${codeBlockLang}]` : "[code]"}\x1b[0m`,
+        );
+      } else {
+        inCodeBlock = false;
+        codeBlockLang = "";
+        out.push("\x1b[2m[/code]\x1b[0m");
+      }
+      continue;
+    }
+
+    if (inCodeBlock) {
+      out.push(`\x1b[36m  ${line}\x1b[0m`);
+      continue;
+    }
+
+    const heading = line.match(/^(#{1,6})\s+(.+)$/);
+    if (heading) {
+      out.push(`\x1b[1m${styleInlineMarkdown(heading[2].trim())}\x1b[0m`);
+      continue;
+    }
+
+    const bullet = line.match(/^\s*[-*]\s+(.+)$/);
+    if (bullet) {
+      out.push(`• ${styleInlineMarkdown(bullet[1])}`);
+      continue;
+    }
+
+    const ordered = line.match(/^\s*(\d+)\.\s+(.+)$/);
+    if (ordered) {
+      out.push(`${ordered[1]}. ${styleInlineMarkdown(ordered[2])}`);
+      continue;
+    }
+
+    const quote = line.match(/^\s*>\s?(.*)$/);
+    if (quote) {
+      out.push(`\x1b[2m| ${styleInlineMarkdown(quote[1])}\x1b[0m`);
+      continue;
+    }
+
+    if (/^\s*([-*_])\1\1+\s*$/.test(line)) {
+      out.push("\x1b[2m----------------------------------------\x1b[0m");
+      continue;
+    }
+
+    out.push(styleInlineMarkdown(line));
+  }
+
+  return out.join("\n");
+}
+
 function saveLatestSuggestion(content: string): string {
   const suggestionsPath = path.resolve("output", "suggestions.md");
   fs.mkdirSync(path.dirname(suggestionsPath), { recursive: true });
@@ -440,6 +526,15 @@ async function main() {
   const history: Message[] = [{ role: "system", content: systemPrompt }];
 
   async function refreshWeatherIfNeeded(query: string): Promise<boolean> {
+    let beganOperationalLogs = false;
+    const beginOperationalLogs = () => {
+      if (beganOperationalLogs) {
+        return;
+      }
+      console.log();
+      beganOperationalLogs = true;
+    };
+
     const fallbackLocation = extractWeatherLocation(query);
     const fallbackDate = extractWeatherDateLabel(query);
     const shouldTryWeather =
@@ -457,6 +552,7 @@ async function main() {
       weatherCoversRequestedDate(weather, fallbackDate);
 
     if (canReuseCachedWeatherDeterministically) {
+      beginOperationalLogs();
       logInfo(
         `Using cached weather forecast ${dim(`(${weather?.location ?? "unknown location"})`)}`,
       );
@@ -467,6 +563,7 @@ async function main() {
       () => null,
     );
     if (weatherIntentResult) {
+      beginOperationalLogs();
       logWeatherIntentStats(weatherIntentResult);
     }
 
@@ -486,6 +583,7 @@ async function main() {
       weatherCoversRequestedDate(weather, weatherIntent.dateLabel);
 
     if (canReuseCachedWeather) {
+      beginOperationalLogs();
       logInfo(
         `Using cached weather forecast ${dim(`(${weather?.location ?? "unknown location"})`)}`,
       );
@@ -496,6 +594,7 @@ async function main() {
       .filter(Boolean)
       .join(" in ");
     const locationLabel = requestLabel ? ` for ${requestLabel}` : "";
+    beginOperationalLogs();
     process.stdout.write(
       dim(`Refreshing weather forecast${locationLabel}... `),
     );
@@ -531,25 +630,11 @@ async function main() {
 
     const stop = startSpinner("Thinking...");
     try {
-      let started = false;
-      let streamedAnyContent = false;
-      const result = await streamChat(client, history, (delta) => {
-        if (delta) {
-          if (!started) {
-            started = true;
-            stop();
-            process.stdout.write("Assistant: ");
-          }
-          streamedAnyContent = true;
-          process.stdout.write(delta);
-        }
-      });
+      const result = await streamChat(client, history, () => {});
       stop();
-      if (!streamedAnyContent) {
-        process.stdout.write("Assistant: ");
-        process.stdout.write(result.content);
-      }
       console.log();
+      console.log("Assistant:");
+      console.log(renderMarkdownForTerminal(result.content));
       console.log();
       console.log(
         `\x1b[2m  ⏱ ${(result.elapsedMs / 1000).toFixed(1)}s · ${result.totalTokens} tokens (${result.promptTokens} in / ${result.completionTokens} out) · ${result.model}\x1b[0m`,
