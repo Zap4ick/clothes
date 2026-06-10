@@ -186,7 +186,7 @@ async function withEndpointFailover<T>(
   if (clients.length > 1 && preferredEndpoint && startIndex > 0) {
     console.log(
       dim(
-        `\n[AI failover] Using preferred endpoint ${preferredEndpoint} as first choice.`,
+        `[AI failover] Using preferred endpoint ${preferredEndpoint} as first choice.`,
       ),
     );
   }
@@ -208,7 +208,7 @@ async function withEndpointFailover<T>(
       ) {
         console.log(
           dim(
-            `\n[AI failover] Preferred endpoint updated to ${preferredEndpoint}.`,
+            `[AI failover] Preferred endpoint updated to ${preferredEndpoint}.`,
           ),
         );
       }
@@ -228,7 +228,7 @@ async function withEndpointFailover<T>(
           : "(no next endpoint)";
       console.warn(
         dim(
-          `\n[AI failover] Request failed on ${currentEndpoint}
+          `[AI failover] Request failed on ${currentEndpoint}
   ↳ ${summarizeError(err)}
   ↳ switching to ${nextEndpoint}`,
         ),

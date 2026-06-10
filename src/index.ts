@@ -510,13 +510,11 @@ async function main() {
   let systemPrompt = buildSystemPrompt(clothes, stylePreferences, weather);
   const client = createClient();
   let aiModel: string;
-  process.stdout.write(dim("Checking AI connection... "));
+  logInfo("Checking AI connection...");
   const aiStart = Date.now();
   try {
     aiModel = await preflightAI(client);
   } catch (err: unknown) {
-    const aiElapsed = Date.now() - aiStart;
-    logInfo(`(${formatMillis(aiElapsed)})`);
     logAIFailure("AI preflight failed.", err);
     throw err;
   }
