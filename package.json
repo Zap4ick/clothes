@@ -1,6 +1,6 @@
 {
   "name": "clothes-consultant",
-  "version": "0.0.8",
+  "version": "0.0.9",
   "description": "AI clothing consultant CLI",
   "main": "src/index.ts",
   "scripts": {

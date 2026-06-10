@@ -1,6 +1,6 @@
 # 👗 AI Clothing Consultant
 
-Version 0.0.8
+Version 0.0.9
 
 A CLI tool that suggests outfits from your wardrobe using either Google Sheets or local wardrobe files as a clothes database and a local LLM via LM Studio.
 
