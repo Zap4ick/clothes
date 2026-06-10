@@ -2,7 +2,7 @@
 
 Version 0.0.13
 
-A CLI tool that suggests outfits from your wardrobe using either Google Sheets or local wardrobe files as a clothes database and a local LLM via LM Studio.
+A CLI tool that suggests outfits from your wardrobe using either Google Sheets or local wardrobe files as a clothes database and a local LLM.
 
 ## Features
 
@@ -10,7 +10,7 @@ A CLI tool that suggests outfits from your wardrobe using either Google Sheets o
 - Fetches live weather forecast automatically based on your location
 - Uses your personal style preferences as context
 - Interactive multi-turn chat — ask follow-up questions naturally
-- Runs fully locally via LM Studio (no cloud AI costs)
+- Runs fully locally via LM Studio or other local AI endpoint (no cloud AI costs)
 - Saves the latest assistant suggestion to `output/suggestions.md` on every request
 
 ## Prerequisites
@@ -32,7 +32,7 @@ npm install
 
 #### Option A: Google Sheets
 
-Your sheet should have three tabs: **Shoes**, **Tops**, **Pants**.  
+Your sheet should have three tabs: **Shoes**, **Tops**, **Pants**, **Accessories**.  
 Each tab has a header row with columns: `name | type | color | condition | fit | notes`
 
 Example:
@@ -65,6 +65,8 @@ Local files use the same columns as Google Sheets: `name | type | color | condit
 1. Download a model (e.g. `gemma-4-e4b`, `llama-3.1-8b-instruct`)
 2. Go to the **Developer** tab → load the model → click **Start Server**
 3. Note the model name shown in the UI
+
+Any openai-compatible endpoint will do.
 
 ### 5. Configure environment
 
