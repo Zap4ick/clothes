@@ -52,15 +52,7 @@ Supported layouts:
 
 Local files use the same columns as Google Sheets: `name | type | color | condition | fit | notes`
 
-### 3. Google Service Account
-
-1. Go to [Google Cloud Console](https://console.cloud.google.com)
-2. Create a project → enable **Google Sheets API**
-3. Create a **Service Account** → generate a **JSON key**
-4. Save the key as `credentials/service-account.json`
-5. Share your Google Sheet with the service account email (Viewer access)
-
-### 4. LM Studio
+### 3. Option A: LM Studio
 
 1. Download a model (e.g. `gemma-4-e4b`, `llama-3.1-8b-instruct`)
 2. Go to the **Developer** tab → load the model → click **Start Server**
@@ -68,7 +60,17 @@ Local files use the same columns as Google Sheets: `name | type | color | condit
 
 Any openai-compatible endpoint will do.
 
-### 5. Configure environment
+### 3. Option B: Google Service Account
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com)
+2. Create a project → enable **Google Sheets API**
+3. Create a **Service Account** → generate a **JSON key**
+4. Save the key as `credentials/service-account.json`
+5. Share your Google Sheet with the service account email (Viewer access)
+
+Only local or only external endpoint can be used.
+
+### 4. Configure environment
 
 ```bash
 cp .env.example .env
@@ -97,7 +99,7 @@ GOOGLE_CREDENTIALS_PATH=./credentials/service-account.json
 
 When `EXTERNAL_AI_BASE_URL` is set, the app still tries local endpoints first and then falls back to the external ones if local requests fail. Works with any OpenAI-compatible API: OpenAI, GitHub Models, Ollama, etc.
 
-### 6. Style preferences
+### 5. Style preferences
 
 Copy `style-preferences.template.md` to `style-preferences.md` and edit the copy to describe your personal style — the AI uses this as context for every suggestion. The local `style-preferences.md` file is gitignored so your personal notes stay private.
 
