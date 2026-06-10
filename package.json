@@ -1,0 +1,20 @@
+{
+  "name": "clothes-consultant",
+  "version": "0.0.5",
+  "description": "AI clothing consultant CLI",
+  "main": "src/index.ts",
+  "scripts": {
+    "start": "ts-node src/index.ts"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "googleapis": "^144.0.0",
+    "openai": "^4.52.7",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.10",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.3"
+  }
+}
