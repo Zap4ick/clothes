@@ -1,12 +1,12 @@
 # 👗 AI Clothing Consultant
 
-Version 0.0.5
+Version 0.0.7
 
-A CLI tool that suggests outfits from your wardrobe using your Google Sheets as a clothes database and a local LLM via LM Studio.
+A CLI tool that suggests outfits from your wardrobe using either Google Sheets or local wardrobe files as a clothes database and a local LLM via LM Studio.
 
 ## Features
 
-- Reads your wardrobe from a Google Sheet (tabs: Shoes, Tops, Pants)
+- Reads your wardrobe from Google Sheets or local wardrobe files (tabs: Shoes, Tops, Pants)
 - Fetches live weather forecast automatically based on your location
 - Uses your personal style preferences as context
 - Interactive multi-turn chat — ask follow-up questions naturally
@@ -17,8 +17,8 @@ A CLI tool that suggests outfits from your wardrobe using your Google Sheets as 
 
 - [Node.js](https://nodejs.org/) v18+
 - [LM Studio](https://lmstudio.ai/) with a model downloaded and the local server running
-- A Google Cloud project with the **Google Sheets API** enabled
-- A Google Sheet with your wardrobe (see structure below)
+- If you use Google Sheets: a Google Cloud project with the **Google Sheets API** enabled and a Google Sheet with your wardrobe
+- If you use local files: a `wardrobe/` folder with CSV/XLS files or a `wardrobe.xlsx` workbook
 
 ## Setup
 
@@ -28,16 +28,29 @@ A CLI tool that suggests outfits from your wardrobe using your Google Sheets as 
 npm install
 ```
 
-### 2. Google Sheets
+### 2. Choose Your Wardrobe Source
+
+#### Option A: Google Sheets
 
 Your sheet should have three tabs: **Shoes**, **Tops**, **Pants**.  
-Each tab has a header row with columns: `name | type | color | notes`
+Each tab has a header row with columns: `name | type | color | condition | fit | notes`
 
 Example:
-| name | type | color | notes |
-|------|------|-------|-------|
-| White Oxford Shirt | button-up | white | slim fit |
-| Navy Chinos | trousers | navy | |
+| name | type | color | condition | fit | notes |
+|------|------|-------|-----------|-----|-------|
+| White Oxford Shirt | button-up | white | good | slim | slim fit |
+| Navy Chinos | trousers | navy | okay | regular | |
+
+#### Option B: Local Files
+
+Set `WARDROBE_SOURCE=local` in `.env` to use local files instead of Google Sheets.
+
+Supported layouts:
+
+- A single `wardrobe/wardrobe.xlsx` or `wardrobe/wardrobe.xls` file with **Shoes**, **Tops**, **Pants** sheets
+- Separate `wardrobe/Shoes.csv` or `wardrobe/Shoes.xlsx`, `wardrobe/Tops.csv` or `wardrobe/Tops.xlsx`, and `wardrobe/Pants.csv` or `wardrobe/Pants.xlsx`
+
+Local files use the same columns as Google Sheets: `name | type | color | condition | fit | notes`
 
 ### 3. Google Service Account
 
@@ -84,7 +97,7 @@ When `EXTERNAL_AI_BASE_URL` is set, the app still tries local endpoints first an
 
 ### 6. Style preferences
 
-Edit `style-preferences.md` to describe your personal style — the AI uses this as context for every suggestion. Write it in plain language, as detailed or brief as you like.
+Copy `style-preferences.template.md` to `style-preferences.md` and edit the copy to describe your personal style — the AI uses this as context for every suggestion. The local `style-preferences.md` file is gitignored so your personal notes stay private.
 
 ## Usage
 
@@ -102,7 +115,7 @@ npm start -- "what should I wear in Gdansk tomorrow?"
 
 On startup the app will:
 
-- Load your wardrobe from Google Sheets
+- Load your wardrobe from the configured source
 - Fetch today's and tomorrow's weather forecast
 - Start an interactive chat session
 
@@ -123,11 +136,13 @@ Type `exit` or press `Ctrl+C` to quit.
 clothes/
 ├── src/
 │   ├── index.ts              # Entry point & chat loop
-│   ├── sheets.ts             # Google Sheets reader
+│   ├── sheets.ts             # Google Sheets wardrobe reader
+│   ├── local-reader.ts       # Local wardrobe file reader
 │   ├── ai.ts                 # LM Studio client
 │   ├── prompts.ts            # System prompt builder
 │   └── weather.ts            # Weather forecast fetcher
-├── style-preferences.md      # Your personal style notes
+├── style-preferences.template.md # Starter template for your personal style notes
+├── style-preferences.md      # Your local personal style notes (gitignored)
 ├── credentials/              # service-account.json (gitignored)
 ├── .env                      # Your config (gitignored)
 ├── .env.example              # Config template
