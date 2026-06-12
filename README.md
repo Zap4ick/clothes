@@ -1,6 +1,6 @@
 # 👗 AI Clothing Consultant
 
-Version 0.0.13
+Version 0.0.14
 
 A CLI tool that suggests outfits from your wardrobe using either Google Sheets or local wardrobe files as a clothes database and a local LLM.
 
@@ -11,7 +11,7 @@ A CLI tool that suggests outfits from your wardrobe using either Google Sheets o
 - Uses your personal style preferences as context
 - Interactive multi-turn chat — ask follow-up questions naturally
 - Runs fully locally via LM Studio or other local AI endpoint (no cloud AI costs)
-- Saves the latest assistant suggestion to `output/suggestions.md` on every request
+- Saves the latest assistant suggestion to `output/suggestions.md` only for suggestion-style answers (not casual conversation)
 
 ## Prerequisites
 
@@ -123,7 +123,7 @@ On startup the app will:
 - Fetch today's and tomorrow's weather forecast
 - Start an interactive chat session
 
-After every assistant response, the app overwrites `output/suggestions.md` with the latest suggestion and logs where it was saved.
+After suggestion-style assistant responses, the app overwrites `output/suggestions.md` with the latest suggestion and logs where it was saved.
 
 **Example prompts:**
 

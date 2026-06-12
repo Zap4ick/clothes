@@ -146,6 +146,85 @@ function saveLatestSuggestion(content: string): string {
   return suggestionsPath;
 }
 
+function isConversationInput(input: string): boolean {
+  const normalized = input
+    .toLowerCase()
+    .replace(/[^a-z0-9\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  if (!normalized) {
+    return true;
+  }
+
+  const conversationPhrases = new Set([
+    "hi",
+    "hello",
+    "hey",
+    "thanks",
+    "thank you",
+    "thx",
+    "ok",
+    "okay",
+    "cool",
+    "nice",
+    "great",
+    "awesome",
+    "sounds good",
+    "got it",
+    "bye",
+    "goodbye",
+    "see you",
+  ]);
+
+  if (conversationPhrases.has(normalized)) {
+    return true;
+  }
+
+  const shortConversationRegex =
+    /^(thanks( a lot)?|thank you( so much)?|that helps|perfect|all good|no worries|understood)$/;
+
+  return normalized.length <= 30 && shortConversationRegex.test(normalized);
+}
+
+function looksLikeOutfitSuggestion(content: string): boolean {
+  const normalized = content.toLowerCase();
+  const outfitKeywords = [
+    "outfit",
+    "wear",
+    "top",
+    "bottom",
+    "shoes",
+    "jacket",
+    "coat",
+    "shirt",
+    "pants",
+    "jeans",
+    "layer",
+    "look",
+  ];
+
+  const keywordHits = outfitKeywords.reduce((count, keyword) => {
+    return count + (normalized.includes(keyword) ? 1 : 0);
+  }, 0);
+
+  const hasStructuredFormat =
+    /^\s*[-*]\s+/m.test(content) || /^\s*\d+\.\s+/m.test(content);
+
+  return keywordHits >= 2 && (hasStructuredFormat || normalized.length > 120);
+}
+
+function shouldPersistSuggestion(
+  userInput: string,
+  assistantContent: string,
+): boolean {
+  if (isConversationInput(userInput)) {
+    return false;
+  }
+
+  return looksLikeOutfitSuggestion(assistantContent);
+}
+
 function formatMillis(ms: number): string {
   return `${ms}ms`;
 }
@@ -638,8 +717,14 @@ async function main() {
         `\x1b[2m  ⏱ ${(result.elapsedMs / 1000).toFixed(1)}s · ${result.totalTokens} tokens (${result.promptTokens} in / ${result.completionTokens} out) · ${result.model}\x1b[0m`,
       );
       console.log();
-      const savedSuggestionPath = saveLatestSuggestion(result.content);
-      logInfo(`Saved latest assistant suggestion to ${savedSuggestionPath}`);
+      if (shouldPersistSuggestion(input, result.content)) {
+        const savedSuggestionPath = saveLatestSuggestion(result.content);
+        logInfo(`Saved latest assistant suggestion to ${savedSuggestionPath}`);
+      } else {
+        logInfo(
+          "Skipped saving suggestions.md (response was conversation-only).",
+        );
+      }
       history.push({ role: "assistant", content: result.content });
     } catch (err: unknown) {
       stop();
